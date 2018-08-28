@@ -21,7 +21,7 @@ re_numbers = re.compile(r'\d', re.UNICODE)
 re_emails = re.compile(r'[^\s]+@[^\s]+', re.UNICODE)
 re_url = re.compile(r'(http|https)://[^\s]+', re.UNICODE)
 
-re_nonAlpha = re.compile(r'\W+', re.UNICODE)
+re_separateDots = re.compile(r'(?<=\.)(?=[^\s])', re.UNICODE)
 
 re_quotes = re.compile(r'(?u)[‘’`′“”"\']', re.UNICODE)
 re_hyphen = re.compile(r'[–-]')
@@ -40,6 +40,8 @@ def cleanString(text, removePunct):
     text = re_emails.sub('EMAIL', text)
     text = re_url.sub('URL', text)
 
+    text = re_separateDots.sub(' ', text)
+
     text = re_quotes.sub('', text)
     text = re_hyphen.sub('', text)
     text = re_trim.sub(' ', text)
@@ -52,10 +54,9 @@ def process(text, removePunct, minWords, removeStop, stopWords):
     text = [cleanString(phrase, removePunct) for phrase in text]
     tokensList = [nltk.word_tokenize(phrase) for phrase in text]
     if removePunct:
-        print(tokensList)
         tokensList = [[tk for tk in tokens if tk not in string.punctuation] for tokens in tokensList]
     if removeStop:
-        tokensList = [[tk for tk in tokens if tk not in stopWords] for tokens in tokensList]
+        tokensList = [[tk for tk in tokens if tk not in stopWords or tk != '...'] for tokens in tokensList]
     text = [' '.join(tokens) for tokens in tokensList if sum(tk.isalpha() for tk in tokens) >= minWords]
 
     return text
