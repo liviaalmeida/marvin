@@ -26,7 +26,9 @@ def home():
 		'/pre': {
 			'file': 'The CSV file to be preprocessed',
 			'removePunct': 'Remove all punctuation when value is True. Default value is False',
-			'minWords': 'Minimum number of words in phrase. Default value is 1'
+			'minWords': 'Minimum number of words in phrase. Default value is 1',
+			'removeStop': 'Remove stop words when value is True. Default value is False',
+			'stopWords': 'User can specify stop words to be removed. Must be lower and separated by ;'
 		}
 	}}), 200)
 
