@@ -52,7 +52,7 @@ def cleanString(text, removePunct):
 def process(text, removePunct, minWords, removeStop, stopWords):
 
     text = [cleanString(phrase, removePunct) for phrase in text]
-    tokensList = [nltk.word_tokenize(phrase) for phrase in text]
+    tokensList = [nltk.wordpunct_tokenize(phrase) for phrase in text]
     if removePunct:
         tokensList = [[tk for tk in tokens if tk not in string.punctuation] for tokens in tokensList]
     if removeStop:
