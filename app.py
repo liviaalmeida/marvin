@@ -15,6 +15,14 @@ def csvToText(csvfile):
 		text.append(line[0])
 	return text
 
+
+def defaultStopWords():
+	try:
+		with open('stopwords.txt', 'r') as f:
+			return [line.strip() for line in f.readlines()]
+	except:
+		return []
+
 @app.errorhandler(404)
 def not_found(error):
 	return make_response(jsonify({'error': 'Not found'}), 404)
@@ -62,8 +70,11 @@ def post_pre():
 	if 'removeStop' in request.form and request.form['removeStop'] == 'True':
 		removeStop = True
 	
-	if removeStop and 'stopWords' in request.form:
-		stopWords = [w.strip() for w in request.form['stopWords'].split(';')]
+	if removeStop:
+		if 'stopWords' in request.form:
+			stopWords = [w.strip() for w in request.form['stopWords'].split(';')]
+		else:
+			stopWords = defaultStopWords()
 	
 	text = preprocessing.process(text, removePunct, minWords, removeStop, stopWords)
 	
