@@ -3,6 +3,7 @@
 import io
 import csv
 import preprocessing
+import clustering
 from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
@@ -19,9 +20,9 @@ def csvToText(csvfile):
 def defaultStopWords():
 	try:
 		with open('stopwords.txt', 'r') as f:
-			return [line.strip() for line in f.readlines()]
+			return set([line.strip() for line in f.readlines()])
 	except:
-		return []
+		return set()
 
 @app.errorhandler(404)
 def not_found(error):
@@ -55,7 +56,7 @@ def post_pre():
 		return make_response(jsonify({'error': 'Extension not allowed. Must be a CSV file'}), 415)
 	
 	text = csvToText(csvfile)
-	
+
 	removePunct = False
 	minWords = 1
 	removeStop = False
@@ -71,12 +72,15 @@ def post_pre():
 		removeStop = True
 	
 	if removeStop:
+		stopWords = defaultStopWords()
 		if 'stopWords' in request.form:
-			stopWords = [w.strip() for w in request.form['stopWords'].split(';')]
-		else:
-			stopWords = defaultStopWords()
+			userSW = set(request.form['stopWords'].split('\n'))
+			stopWords = stopWords.union(userSW)
 	
-	text = preprocessing.process(text, removePunct, minWords, removeStop, stopWords)
+	text = preprocessing.process(text, minWords, removePunct, removeStop, stopWords)
+
+	if 'removeDuplicates' in request.form and request.form['removeDuplicates'] == 'True':
+		text = list(set(text))
 	
 	outputStream = io.StringIO()
 	writer = csv.writer(outputStream)
@@ -95,7 +99,32 @@ def get_clus():
 
 @app.route('/clus', methods=['POST'])
 def post_clus():
-	return make_response(jsonify({'response': 'Ops... Not implemented yet'}), 501)
+	if 'file' not in request.files:
+		return make_response(jsonify({'error': 'No file uploaded. Please upload a CSV file with key \'file\''}), 400)
+	
+	csvfile = request.files['file']
+
+	if csvfile.filename.split('.')[-1] != 'csv':
+		return make_response(jsonify({'error': 'Extension not allowed. Must be a CSV file'}), 415)
+	
+	text = csvToText(csvfile)
+	
+	numClusters = 5
+
+	if 'clusters' in request.form:
+		numClusters = int(request.form['clusters'])
+
+	clusters = clustering.cluster(text, numClusters)
+
+	outputStream = io.StringIO()
+	writer = csv.writer(outputStream)
+	writer.writerows(clusters)
+
+	output = make_response(outputStream.getvalue())
+	output.headers['Content-Disposition'] = 'attachment; filename=output.csv'
+	output.headers['Content-type'] = 'text/csv'
+	
+	return output
 
 if __name__ == '__main__':
 	app.run(debug=True)
