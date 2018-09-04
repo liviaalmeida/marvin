@@ -50,7 +50,7 @@ def cleanString(text):
     return text.strip()
 
 
-def process(text, removePunct, minWords, removeStop, stopWords):
+def process(text, minWords, removePunct, removeStop, stopWords):
 
     text = [cleanString(phrase) for phrase in text]
     tokensList = [nltk.wordpunct_tokenize(phrase) for phrase in text]
